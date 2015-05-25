@@ -32,7 +32,6 @@ function cleanup()
 	fi
 }
 
-LOG_PREFIX=passenger-status-service-agent
 if [[ -e Gemfile ]]; then
 	BUNDLE_EXEC="bundle exec"
 else
@@ -53,11 +52,11 @@ fi
 trap cleanup EXIT
 
 while true; do
-	echo "$LOG_PREFIX: Querying status"
+	echo "Querying status"
 	if $BUNDLE_EXEC passenger-status > "$TEMPDIR/status.txt"; then
-		echo "$LOG_PREFIX: Posting to status service: $STATUS_SERVICE_URL"
+		echo "Posting to status service: $STATUS_SERVICE_URL"
 		if curl -u "api:$STATUS_SERVICE_API_TOKEN" -F content=@"$TEMPDIR/status.txt" "$STATUS_SERVICE_URL"; then
-			echo "$LOG_PREFIX: Success"
+			echo "Success"
 		fi
 	fi
 	sleep $INTERVAL
