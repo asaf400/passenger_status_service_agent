@@ -32,6 +32,7 @@ function cleanup()
 	fi
 }
 
+LOG_PREFIX=passenger-status-service-agent
 if [[ -e Gemfile ]]; then
 	BUNDLE_EXEC="bundle exec"
 else
@@ -40,11 +41,11 @@ fi
 TEMPDIR=`mktemp -d /tmp/passenger-status-service-agent.XXXXXX`
 INTERVAL=${INTERVAL:-5}
 
-if [[ "$STATUS_SERVICE_URL" != "" ]]; then
+if [[ "$STATUS_SERVICE_URL" = "" ]]; then
 	echo "ERROR: please set the STATUS_SERVICE_URL environment variable." >&2
 	exit 1
 fi
-if [[ "$STATUS_SERVICE_API_TOKEN" != "" ]]; then
+if [[ "$STATUS_SERVICE_API_TOKEN" = "" ]]; then
 	echo "ERROR: please set the STATUS_SERVICE_API_TOKEN environment variable." >&2
 	exit 1
 fi
@@ -58,4 +59,4 @@ while true; do
 	curl -u "api:$STATUS_SERVICE_API_TOKEN" -F content=@"$TEMPDIR/status.txt" "$STATUS_SERVICE_URL"
 	echo "$LOG_PREFIX: Success"
 	sleep $INTERVAL
-end
+done
