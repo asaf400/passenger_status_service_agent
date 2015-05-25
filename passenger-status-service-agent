@@ -54,9 +54,11 @@ trap cleanup EXIT
 
 while true; do
 	echo "$LOG_PREFIX: Querying status"
-	$BUNDLE_EXEC passenger-status > "$TEMPDIR/status.txt"
-	echo "$LOG_PREFIX: Posting to status service: $STATUS_SERVICE_URL"
-	curl -u "api:$STATUS_SERVICE_API_TOKEN" -F content=@"$TEMPDIR/status.txt" "$STATUS_SERVICE_URL"
-	echo "$LOG_PREFIX: Success"
+	if $BUNDLE_EXEC passenger-status > "$TEMPDIR/status.txt"; then
+		echo "$LOG_PREFIX: Posting to status service: $STATUS_SERVICE_URL"
+		if curl -u "api:$STATUS_SERVICE_API_TOKEN" -F content=@"$TEMPDIR/status.txt" "$STATUS_SERVICE_URL"; then
+			echo "$LOG_PREFIX: Success"
+		fi
+	fi
 	sleep $INTERVAL
 done
