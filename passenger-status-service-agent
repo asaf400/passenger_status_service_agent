@@ -37,9 +37,15 @@ if [[ -e Gemfile ]]; then
 else
 	BUNDLE_EXEC=
 fi
+LOG_PREFIX="passenger-status-service-agent"
 TEMPDIR=`mktemp -d /tmp/passenger-status-service-agent.XXXXXX`
-INTERVAL=${INTERVAL:-5}
+HOSTNAME=`hostname -f`
+INTERVAL=${INTERVAL:-10}
 
+if [[ "$DYNO" = "" ]]; then
+	echo "$LOG_PREFIX: will not be activated, because not running on Heroku."
+	exit 0
+fi
 if [[ "$STATUS_SERVICE_URL" = "" ]]; then
 	echo "ERROR: please set the STATUS_SERVICE_URL environment variable." >&2
 	exit 1
@@ -52,12 +58,21 @@ fi
 trap cleanup EXIT
 
 while true; do
-	echo "Querying status"
+	sleep $INTERVAL
+	echo "$LOG_PREFIX: Querying status"
 	if $BUNDLE_EXEC passenger-status > "$TEMPDIR/status.txt"; then
-		echo "Posting to status service: $STATUS_SERVICE_URL"
-		if curl -u "api:$STATUS_SERVICE_API_TOKEN" -F content=@"$TEMPDIR/status.txt" "$STATUS_SERVICE_URL"; then
-			echo "Success"
+		echo "$LOG_PREFIX: Posting to status service: $STATUS_SERVICE_URL"
+		if curl -u "api:$STATUS_SERVICE_API_TOKEN" --fail -sSL \
+			-F hostname=$HOSTNAME -F content=@"$TEMPDIR/status.txt" \
+			-o "$TEMPDIR/curl.txt" \
+			"$STATUS_SERVICE_URL"
+		then
+			CURL_OUTPUT="`cat \"$TEMPDIR/curl.txt\"`"
+			echo "$LOG_PREFIX: => $CURL_OUTPUT"
+			echo "$LOG_PREFIX: Success"
+		else
+			CURL_OUTPUT="`cat \"$TEMPDIR/curl.txt\"`"
+			echo "$LOG_PREFIX: => $CURL_OUTPUT" >&2
 		fi
 	fi
-	sleep $INTERVAL
 done
