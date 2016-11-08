@@ -42,7 +42,7 @@ TEMPDIR=`mktemp -d /tmp/passenger-status-service-agent.XXXXXX`
 HOSTNAME=`hostname -f`
 INTERVAL=${INTERVAL:-10}
 
-if [[ "$DYNO" = "" ]]; then
+if [[ -z "$OPENSHIFT_BUILD_NAMESPACE" ]]; then
 	echo "$LOG_PREFIX: will not be activated, because not running on Heroku."
 	exit 0
 fi
